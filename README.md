@@ -59,7 +59,7 @@ liquidsoap record.liq -- -url "http://ice1.somafm.com/groovesalad-256-mp3" -dir 
 
 Transcoding
 ```
-liquidsoap record.liq -- -url "https://stream.radioparadise.com/rock-flacm" -dir "c:\music" -transcode 1 -samplerate 48000 -format opus -codec libopus -bitrate 128k
+liquidsoap record.liq -- -url "https://stream.radioparadise.com/rock-flacm" -dir "c:\music" -station "Radio Paradise - Rock Mix" -transcode 1 -samplerate 48000 -format opus -codec libopus -bitrate 128k
 
 ```
 
