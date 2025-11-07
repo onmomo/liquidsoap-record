@@ -260,8 +260,12 @@ end
 #add a comment/url to metadata
 def add_metadata(m)
 	comment = m["comment"]
-	streamurl = m["url"]
-	[("comment","#{comment} - ripped with liquidsoap-record - from:  " ^ url()),("url","#{streamurl}")] 
+	streamurl = m["url"]	
+	if string.length(string.trim(m["album"])) <= 0 then
+		[("comment", comment ^ " - ripped with liquidsoap-record - from:  " ^ url()), ("url", streamurl), ("album", folder())]
+	else
+		[("comment", comment ^ " - ripped with liquidsoap-record - from:  " ^ url()), ("url", streamurl)]
+	end
 end
 
 def download_cover(m,covername)
