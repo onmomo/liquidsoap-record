@@ -420,15 +420,11 @@ def handle_file(f)
 	log(label="liquidsoap-record", level=3,tno ^ " POST DURATION " ^ string(f_duration()))
 	log(label="liquidsoap-record", level=3,tno ^ " CLOSE " ^ string(f_duration()) ^ " [" ^ format_time(float_of_string(string(f_duration()))) ^ "]  " ^ f )
 
-	if file.exists(tfilename()) and (keep == "1") then
+	if file.exists(tfilename()) then
 	tfilename.set(time.string(tfilename() ^ "-%Y-%m-%d_%H-%M-%S." ^ ext()))
 	file.copy(tmp_ext_filename,tfilename())
 	log(label="liquidsoap-record", level=3,tno ^ " Filename exists. Appending timestamp to filename. New filename: "  ^ tfilename())
-	else if file.exists(tfilename()) then
-	file.remove(tfilename())	
-	file.copy(tmp_ext_filename,tfilename())
-	log(label="liquidsoap-record", level=3,tno ^ " Filename exists. Overwriting existing file: "  ^ tfilename())
-	end
+	else
 	file.copy(tmp_ext_filename,tfilename())
 	end
 	
