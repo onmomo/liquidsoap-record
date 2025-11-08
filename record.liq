@@ -49,7 +49,7 @@ f_duration = ref(0.)
 file.mkdir(directory)
 
 #set metadata
-settings.encoder.metadata.export := ["artist", "title", "album", "genre", "date", "tracknumber", "comment", "track", "year", "dj", "next", "apic", "pic", "metadata_url", "metadata_block_picture", "coverart", "cover_url" , "url"]
+settings.encoder.metadata.export := ["artist", "title", "album", "albumartist", "genre", "date", "tracknumber", "comment", "track", "year", "dj", "next", "apic", "pic", "metadata_url", "metadata_block_picture", "coverart", "cover_url" , "url"]
 
 #set log level
 settings.log.level.set(int_of_string(logoutput))
@@ -259,13 +259,24 @@ end
 
 #add a comment/url to metadata
 def add_metadata(m)
-	comment = m["comment"]
-	streamurl = m["url"]	
-	if string.length(string.trim(m["album"])) <= 0 then
-		[("comment", comment ^ " - ripped with liquidsoap-record - from:  " ^ url()), ("url", streamurl), ("album", folder())]
-	else
-		[("comment", comment ^ " - ripped with liquidsoap-record - from:  " ^ url()), ("url", streamurl)]
-	end
+  # read existing fields
+  comment_raw     = m["comment"]
+  streamurl       = m["url"]
+  album_trim      = string.trim(m["album"])
+  albumartist_trim = string.trim(m["albumartist"])
+
+  # build new/overridden values
+  comment_new     = comment_raw ^ " - ripped with liquidsoap-record - from: " ^ url()
+  album_new       = if string.length(album_trim) <= 0 then folder() else album_trim end
+  albumartist_new = if string.length(albumartist_trim) <= 0 then "Various Artists" else albumartist_trim end
+
+  # return list of (key,value) pairs to set/override
+  [
+    ("comment", comment_new),
+    ("url", streamurl),
+    ("album", album_new),    
+	("albumartist", albumartist_new),	
+  ]
 end
 
 def download_cover(m,covername)
