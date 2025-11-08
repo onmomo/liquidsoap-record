@@ -49,7 +49,7 @@ f_duration = ref(0.)
 file.mkdir(directory)
 
 #set metadata
-settings.encoder.metadata.export := ["artist", "title", "album", "albumartist", "genre", "date", "tracknumber", "comment", "track", "year", "dj", "next", "apic", "pic", "metadata_url", "metadata_block_picture", "coverart", "cover_url" , "url"]
+settings.encoder.metadata.export := ["artist", "title", "album", "albumartist", "compilation", "genre", "date", "tracknumber", "comment", "track", "year", "dj", "next", "apic", "pic", "metadata_url", "metadata_block_picture", "coverart", "cover_url" , "url"]
 
 #set log level
 settings.log.level.set(int_of_string(logoutput))
@@ -275,7 +275,8 @@ def add_metadata(m)
     ("comment", comment_new),
     ("url", streamurl),
     ("album", album_new),    
-	("albumartist", albumartist_new),	
+	("albumartist", albumartist_new),
+	("compilation", '1'),		
   ]
 end
 
