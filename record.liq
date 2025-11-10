@@ -259,26 +259,42 @@ end
 
 #add a comment/url to metadata
 def add_metadata(m)
-  # read existing fields
-  comment_raw     = m["comment"]
-  streamurl       = m["url"]
-  album_trim      = string.trim(m["album"])
+  # Directory where your recorded FLACs are stored
+  dir = "/recordings"
+
+  # Count existing .flac files
+  files = list_files(dir)
+  flacs = list.filter(fun(f) -> string.endswith(f, ".flac"), files)
+  count = list.length(flacs)
+
+  # Read existing metadata fields
+  comment_raw      = m["comment"]
+  streamurl        = m["url"]
+  album_trim       = string.trim(m["album"])
   albumartist_trim = string.trim(m["albumartist"])
 
-  # build new/overridden values
-  comment_new     = comment_raw ^ " - ripped with liquidsoap-record - from: " ^ url()
+  # Build new/overridden values
+  comment_new     = comment_raw ^ "- ripped with liquidsoap-record - from: " ^ url()
   album_new       = if string.length(album_trim) <= 0 then folder() else album_trim end
   albumartist_new = if string.length(albumartist_trim) <= 0 then "Various Artists" else albumartist_trim end
 
-  # return list of (key,value) pairs to set/override
+  # Track number based on number of existing FLACs (next file)
+  tracknum = string.of_int(count + 1)
+
+  # Return list of (key,value) pairs to override/add
   [
     ("comment", comment_new),
     ("url", streamurl),
-    ("album", album_new),    
-	("albumartist", albumartist_new),
-	("compilation", '1'),		
+    ("album", album_new),
+    ("albumartist", albumartist_new),
+    ("compilation", "1"),
+    ("tracknumber", tracknum)
   ]
 end
+
+# Apply it to your source
+# s1 = map_metadata(add_metadata, s1)
+
 
 def download_cover(m,covername)
 	cover.set("")
