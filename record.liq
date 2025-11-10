@@ -453,9 +453,8 @@ def handle_file(f)
 	file.copy(tmp_ext_filename,tfilename())
 	log(label="liquidsoap-record", level=3,tno ^ " Filename exists. Appending timestamp to filename. New filename: "  ^ tfilename())
 	else if file.exists(tfilename()) then
-	file.remove(tfilename())	
-	file.copy(tmp_ext_filename,tfilename())
-	log(label="liquidsoap-record", level=3,tno ^ " Filename exists. Overwriting existing file: "  ^ tfilename())
+	# Do nothing - skip file copy.
+	log(label="liquidsoap-record", level=3,tno ^ " Filename exists. Skipping: "  ^ tfilename())
 	end
 	file.copy(tmp_ext_filename,tfilename())
 	end
