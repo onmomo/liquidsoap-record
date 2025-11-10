@@ -259,36 +259,37 @@ end
 
 #add a comment/url to metadata
 def add_metadata(m)
-  # Directory where your recorded FLACs are stored
-  dir = "/recordings"
+  # directory to scan
+  dir = directory ^ "/" ^ folder()
 
-  # Count existing .flac files
-  files = list_files(dir)
-  flacs = list.filter(fun(f) -> string.endswith(f, ".flac"), files)
-  count = list.length(flacs)
+  # list only the relevant files in the directory
+  count = list.length(file.ls(recursive=false, pattern="*."^ext(), dir))
 
-  # Read existing metadata fields
-  comment_raw      = m["comment"]
-  streamurl        = m["url"]
-  album_trim       = string.trim(m["album"])
-  albumartist_trim = string.trim(m["albumartist"])
+  # track number as string
+  tracknum = string.of_int(count + 1)
 
-  # Build new/overridden values
-  comment_new     = comment_raw ^ "- ripped with liquidsoap-record - from: " ^ url()
+  # read existing fields (assume empty strings)
+  comment_raw       = if m["comment"] == "" then "" else m["comment"] end
+  streamurl         = if m["url"] == "" then url() else m["url"] end
+  album_trim        = string.trim(if m["album"] == "" then "" else m["album"] end)
+  albumartist_trim  = string.trim(if m["album_artist"] == "" then "" else m["album_artist"] end)
+
+  # build new values
+  comment_new     = comment_raw ^ " - ripped with liquidsoap-record - from: " ^ streamurl
   album_new       = if string.length(album_trim) <= 0 then folder() else album_trim end
   albumartist_new = if string.length(albumartist_trim) <= 0 then "Various Artists" else albumartist_trim end
 
-  # Track number based on number of existing FLACs (next file)
-  tracknum = string.of_int(count + 1)
-
-  # Return list of (key,value) pairs to override/add
+  # return metadata map
   [
+    ("title", if m["title"] == null then "" else m["title"] end),
+    ("artist", if m["artist"] == null then "" else m["artist"] end),
+    ("album", album_new),
+    ("ALBUMARTIST", albumartist_new),
+    ("performer", albumartist_new),
+    ("track", tracknum),
     ("comment", comment_new),
     ("url", streamurl),
-    ("album", album_new),
-    ("albumartist", albumartist_new),
-    ("compilation", "1"),
-    ("tracknumber", tracknum)
+    ("compilation", "1")
   ]
 end
 
