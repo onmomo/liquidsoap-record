@@ -49,7 +49,7 @@ f_duration = ref(0.)
 file.mkdir(directory)
 
 #set metadata
-settings.encoder.metadata.export := ["artist", "title", "album", "albumartist", "compilation", "genre", "date", "tracknumber", "comment", "track", "year", "dj", "next", "apic", "pic", "metadata_url", "metadata_block_picture", "coverart", "cover_url" , "url"]
+settings.encoder.metadata.export := ["artist", "title", "album", "albumartist", "compilation", "genre", "date", "tracknumber", "discnumber", "comment", "track", "year", "dj", "next", "apic", "pic", "metadata_url", "metadata_block_picture", "coverart", "cover_url" , "url"]
 
 #set log level
 settings.log.level.set(int_of_string(logoutput))
@@ -257,42 +257,6 @@ def process_metadata(m)
 	end
 end
 
-#add a comment/url to metadata
-def add_metadata(m)
-  # directory to scan
-  dir = directory ^ "/" ^ folder()
-
-  # list only the relevant files in the directory
-  count = list.length(file.ls(recursive=false, pattern="*."^ext(), dir))
-
-  # track number as string
-  tracknum = string.of_int(count + 1)
-
-  # read existing fields (assume empty strings)
-  comment_raw       = if m["comment"] == "" then "" else m["comment"] end
-  streamurl         = if m["url"] == "" then url() else m["url"] end
-  album_trim        = string.trim(if m["album"] == "" then "" else m["album"] end)
-  albumartist_trim  = string.trim(if m["album_artist"] == "" then "" else m["album_artist"] end)
-
-  # build new values
-  comment_new     = comment_raw ^ " - ripped with liquidsoap-record - from: " ^ streamurl
-  album_new       = if string.length(album_trim) <= 0 then folder() else album_trim end
-  albumartist_new = if string.length(albumartist_trim) <= 0 then "Various Artists" else albumartist_trim end
-
-  # return metadata map
-  [
-    ("title", if m["title"] == null then "" else m["title"] end),
-    ("artist", if m["artist"] == null then "" else m["artist"] end),
-    ("album", album_new),
-    ("ALBUMARTIST", albumartist_new),
-    ("performer", albumartist_new),
-    ("track", tracknum),
-    ("comment", comment_new),
-    ("url", streamurl),
-    ("compilation", "1")
-  ]
-end
-
 # Apply it to your source
 # s1 = map_metadata(add_metadata, s1)
 
@@ -333,19 +297,58 @@ end
 filename = ref(time.string("#{directory}/" ^ folder() ^ "/%Y-%m-%d_%H-%M-%S." ^ ext()^ ".rec#s"))
 nowrecording.set(time.string("%Y-%m-%d_%H-%M-%S." ^ ext()^ ".rec#s"))
 
+#set tracknum start
+dir = directory ^ "/" ^ folder()
+count = list.length(file.ls(recursive=false, pattern="*."^ext(), dir)) + 1
+tracknum = ref(count)
+log(label="liquidsoap-record", level=3,"Initialized with track number: " ^ string(tracknum()))
+
+
+#add a comment/url to metadata
+def add_metadata(m)
+  # read existing fields (assume empty strings)
+  comment_raw       = if m["comment"] == "" then "" else m["comment"] end
+  streamurl         = if m["url"] == "" then url() else m["url"] end
+  album_trim        = string.trim(if m["album"] == "" then "" else m["album"] end)
+  albumartist_trim  = string.trim(if m["albumartist"] == "" then "" else m["albumartist"] end)
+  track 			= string.of_int(tracknum())
+
+  # build new values
+  comment_new     = comment_raw ^ " - ripped with liquidsoap-record - from: " ^ streamurl
+  album_new       = if string.length(album_trim) <= 0 then folder() else album_trim end
+  albumartist_new = if string.length(albumartist_trim) <= 0 then "Various Artists" else albumartist_trim end
+
+  # return metadata map
+  [
+    ("title", if m["title"] == null then "" else m["title"] end),
+    ("artist", if m["artist"] == null then "" else m["artist"] end),
+    ("album", album_new),
+    ("albumartist", albumartist_new),
+    ("performer", albumartist_new),    
+    ("comment", comment_new),
+    ("url", streamurl),
+    ("compilation", "1"),
+	("track", track),
+	("tracknumber", track),
+	("discnumber", "1"),	
+  ]
+end
+
+
+#liquidsoap app/scripts/record.liq -- -url https://stream.radioparadise.com/rock-flacm -dir /music/ -covers 0 -id s308827 -transcode 0 -station 'Radio Paradise (Rock Mix)'
 #define when to reopen file on new metadata
 def handle_metadata(m)	
 	if single != "1" then
 	log(label="liquidsoap-record", level=3,"rec#" ^ string(counter()) ^ " NEW METADATA " ^ string(m))
 	if (m["artist"] != "") and (m["title"] != "") and ((m["artist"] != tmp_artist()) or (m["title"] != tmp_title())) then
 	log(label="liquidsoap-record", level=3,"rec#" ^ string(counter()) ^ " RE-OPEN ARTIST - TITLE")
-	ref.incr(counter)
+	ref.incr(counter)	
 	tmp_artist.set(m["artist"])
 	tmp_title.set(m["title"])
 	f_artist = remove_illegal(m["artist"])
 	f_title = remove_illegal(m["title"])
-	filename.set("#{directory}/" ^ folder() ^  "/#{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
-	nowrecording.set("#{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
+	filename.set("#{directory}/" ^ folder() ^  "/#{tracknum()} #{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
+	nowrecording.set("#{tracknum()} #{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
 	if covers == "1" then
 	thread.run(delay=5.,{download_cover(m,"#{directory}/" ^ folder() ^  "/rec#" ^ string(counter()) ^ ".cover")})
 	end
@@ -354,11 +357,11 @@ def handle_metadata(m)
 	true
 	elsif (m["artist"] == "") and (m["title"] != "") and (m["title"] != tmp_title()) then
 	log(label="liquidsoap-record", level=3,"rec#" ^ string(counter()) ^ " RE-OPEN TITLE")
-	ref.incr(counter)
+	ref.incr(counter)	
 	tmp_title.set(m["title"])
 	f_title = remove_illegal(m["title"])
-	filename.set("#{directory}/" ^ folder() ^  "/#{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
-	nowrecording.set("#{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
+	filename.set("#{directory}/" ^ folder() ^  "/#{tracknum()} #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
+	nowrecording.set("#{tracknum()} #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
 	log(label="liquidsoap-record", level=2,"rec#" ^ string(counter()) ^ " New Track Detected. Recording.. #{f_title}." ^ ext())	
 	log(label="liquidsoap-record", level=2,"-- press CTRL-C to stop/exit --")
 	true	
@@ -460,7 +463,8 @@ def handle_file(f)
 	file.copy(tmp_ext_filename,tfilename())
 	end
 	
-	file.remove(tmp_ext_filename)	
+	file.remove(tmp_ext_filename)
+	ref.incr(tracknum)
 	
 	if (f_duration() < 15.) and (keep == "0") then
 	file.remove(tfilename())
