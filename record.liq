@@ -469,13 +469,13 @@ def handle_file(f)
 	file.remove(tfilename())
 	log(label="liquidsoap-record", level=2,tno ^ " Deleted unwanted fragment " ^ tfilename())	
 	# decrement tracknum
-	tracknum := !tracknum - 1
+	tracknum.set(tracknum() - 1)
 	elsif (f_duration() < 15.) and (keep == "1") then
 	file.mkdir("#{directory}/" ^ folder() ^ "/incomplete")
 	file.move(tfilename(),"#{directory}/" ^ folder() ^ "/incomplete")
 	file.remove(tfilename())
 	# decrement tracknum
-	tracknum := !tracknum - 1
+	tracknum.set(tracknum() - 1)
 	log(label="liquidsoap-record", level=3,tno ^ " Moved unwanted fragment ID " ^ tno ^ " to incomplete.Filename "  ^ tfilename())
 		
 	elsif (f_duration() > 15.) then
