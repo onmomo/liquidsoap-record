@@ -348,11 +348,11 @@ def handle_metadata(m)
 	f_artist = remove_illegal(m["artist"])
 	f_title = remove_illegal(m["title"])
 	filename.set("#{directory}/" ^ folder() ^  "/#{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
-	nowrecording.set("#{tracknum()}: #{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
+	nowrecording.set("#{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
 	if covers == "1" then
 	thread.run(delay=5.,{download_cover(m,"#{directory}/" ^ folder() ^  "/rec#" ^ string(counter()) ^ ".cover")})
 	end
-	log(label="liquidsoap-record", level=2,"rec#" ^ string(counter()) ^ " New Track Detected. Recording.. #{f_artist} - #{f_title}." ^ ext())	
+	log(label="liquidsoap-record", level=2,"rec#" ^ string(counter()) ^ " New Track Detected. Recording Track.. #{f_artist} - #{f_title}." ^ ext())	
 	log(label="liquidsoap-record", level=2,"-- press CTRL-C to stop/exit --")
 	true
 	elsif (m["artist"] == "") and (m["title"] != "") and (m["title"] != tmp_title()) then
@@ -361,7 +361,7 @@ def handle_metadata(m)
 	tmp_title.set(m["title"])
 	f_title = remove_illegal(m["title"])
 	filename.set("#{directory}/" ^ folder() ^  "/#{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
-	nowrecording.set("#{tracknum()}: #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
+	nowrecording.set("#{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
 	log(label="liquidsoap-record", level=2,"rec#" ^ string(counter()) ^ " New Track Detected. Recording.. #{f_title}." ^ ext())	
 	log(label="liquidsoap-record", level=2,"-- press CTRL-C to stop/exit --")
 	true	
@@ -467,7 +467,7 @@ def handle_file(f)
 	
 	if (f_duration() < 15.) and (keep == "0") then
 	file.remove(tfilename())
-	log(label="liquidsoap-record", level=3,tno ^ " Deleted unwanted fragment " ^ tfilename())
+	log(label="liquidsoap-record", level=2,tno ^ " Deleted unwanted fragment " ^ tfilename())
 	
 	elsif (f_duration() < 15.) and (keep == "1") then
 	file.mkdir("#{directory}/" ^ folder() ^ "/incomplete")
@@ -476,7 +476,7 @@ def handle_file(f)
 	log(label="liquidsoap-record", level=3,tno ^ " Moved unwanted fragment ID " ^ tno ^ " to incomplete.Filename "  ^ tfilename())
 		
 	elsif (f_duration() > 15.) then
-	log(label="liquidsoap-record", level=2,tno ^ " Finished. Keeping file : " ^ tfilename())
+	log(label="liquidsoap-record", level=2,tno ^ " Finished track #{tracknum()}. Keeping file: " ^ tfilename())
 	# only increment tracknum on kept files
 	ref.incr(tracknum)
 	end
