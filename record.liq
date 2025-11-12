@@ -463,22 +463,22 @@ def handle_file(f)
 	file.copy(tmp_ext_filename,tfilename())
 	end
 	
-	file.remove(tmp_ext_filename)
-	ref.incr(tracknum)
+	file.remove(tmp_ext_filename)	
 	
 	if (f_duration() < 15.) and (keep == "0") then
 	file.remove(tfilename())
 	log(label="liquidsoap-record", level=3,tno ^ " Deleted unwanted fragment " ^ tfilename())
 	
-	elsif (f_duration() < 15.)and (keep == "1") then
+	elsif (f_duration() < 15.) and (keep == "1") then
 	file.mkdir("#{directory}/" ^ folder() ^ "/incomplete")
 	file.move(tfilename(),"#{directory}/" ^ folder() ^ "/incomplete")
 	file.remove(tfilename())
 	log(label="liquidsoap-record", level=3,tno ^ " Moved unwanted fragment ID " ^ tno ^ " to incomplete.Filename "  ^ tfilename())
 		
 	elsif (f_duration() > 15.) then
-	log(label="liquidsoap-record", level=3,tno ^ " Finished. Keeping file : " ^ tfilename())
-	
+	log(label="liquidsoap-record", level=2,tno ^ " Finished. Keeping file : " ^ tfilename())
+	# only increment tracknum on kept files
+	ref.incr(tracknum)
 	end
 	
 end
