@@ -318,7 +318,7 @@ def add_metadata(m)
   album_new       = if string.length(album_trim) <= 0 then folder() else album_trim end
   albumartist_new = if string.length(albumartist_trim) <= 0 then "Various Artists" else albumartist_trim end
 
-  # return metadata map
+  # return metadata map	
   [
     ("title", if m["title"] == null then "" else m["title"] end),
     ("artist", if m["artist"] == null then "" else m["artist"] end),
@@ -327,8 +327,7 @@ def add_metadata(m)
     ("performer", albumartist_new),    
     ("comment", comment_new),
     ("url", streamurl),
-    ("compilation", "1"),
-	("track", track),
+    ("compilation", "1"),	
 	("tracknumber", track),
 	("discnumber", "1"),	
   ]
@@ -347,8 +346,8 @@ def handle_metadata(m)
 	tmp_title.set(m["title"])
 	f_artist = remove_illegal(m["artist"])
 	f_title = remove_illegal(m["title"])
-	filename.set("#{directory}/" ^ folder() ^  "/#{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
-	nowrecording.set("#{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
+	filename.set("#{directory}/" ^ folder() ^ "/#{tracknum()} #{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))	
+	nowrecording.set("#{tracknum()} #{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
 	if covers == "1" then
 	thread.run(delay=5.,{download_cover(m,"#{directory}/" ^ folder() ^  "/rec#" ^ string(counter()) ^ ".cover")})
 	end
@@ -360,8 +359,8 @@ def handle_metadata(m)
 	ref.incr(counter)	
 	tmp_title.set(m["title"])
 	f_title = remove_illegal(m["title"])
-	filename.set("#{directory}/" ^ folder() ^  "/#{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
-	nowrecording.set("#{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
+	filename.set("#{directory}/" ^ folder() ^  "/#{tracknum()} #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
+	nowrecording.set("#{tracknum()} #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
 	log(label="liquidsoap-record", level=2,"rec#" ^ string(counter()) ^ " New Track Detected. Recording.. #{f_title}." ^ ext())	
 	log(label="liquidsoap-record", level=2,"-- press CTRL-C to stop/exit --")
 	true	
@@ -452,15 +451,24 @@ def handle_file(f)
 	log(label="liquidsoap-record", level=3,tno ^ " POST DURATION " ^ string(f_duration()))
 	log(label="liquidsoap-record", level=3,tno ^ " CLOSE " ^ string(f_duration()) ^ " [" ^ format_time(float_of_string(string(f_duration()))) ^ "]  " ^ f )
 
-	if file.exists(tfilename()) and (keep == "1") then
-	tfilename.set(time.string(tfilename() ^ "-%Y-%m-%d_%H-%M-%S." ^ ext()))
-	file.copy(tmp_ext_filename,tfilename())
-	log(label="liquidsoap-record", level=3,tno ^ " Filename exists. Appending timestamp to filename. New filename: "  ^ tfilename())
-	else if file.exists(tfilename()) then
-	# Do nothing - skip file copy.
-	log(label="liquidsoap-record", level=3,tno ^ " Filename exists. Skipping: "  ^ tfilename())
-	end
-	file.copy(tmp_ext_filename,tfilename())
+	let basename = path.basename(tfilename())
+	# Check for existing files without track number prefix
+	let key = r/^[0-9]+\s+/g.replace(fun(_) -> "", basename)
+	let pattern = "* " ^ key
+	let matches = file.ls(recursive=false, pattern=pattern, dir)
+
+	if list.length(matches) > 0 then
+		if keep == "1" then
+			tfilename.set(time.string(tfilename() ^ "-%Y-%m-%d_%H-%M-%S." ^ ext()))
+			file.copy(tmp_ext_filename, tfilename())
+			log(label="liquidsoap-record", level=3,
+				tno ^ " Matching filename found. Appending timestamp. New filename: "  ^ tfilename())
+		else
+			log(label="liquidsoap-record", level=2,
+				tno ^ " Matching filename found. Skipping: "  ^ tfilename())
+		end
+	else
+		file.copy(tmp_ext_filename, tfilename())
 	end
 	
 	file.remove(tmp_ext_filename)	
