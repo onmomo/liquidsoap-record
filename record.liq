@@ -299,7 +299,7 @@ nowrecording.set(time.string("%Y-%m-%d_%H-%M-%S." ^ ext()^ ".rec#s"))
 
 #set tracknum start
 dir = directory ^ "/" ^ folder()
-count = list.length(file.ls(recursive=false, pattern="*."^ext(), dir))
+count = list.length(file.ls(recursive=false, pattern="*."^ext(), dir)) + 1
 tracknum = ref(count)
 log(label="liquidsoap-record", level=2,"Initialized with track number: " ^ string(tracknum()))
 
