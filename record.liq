@@ -299,7 +299,7 @@ nowrecording.set(time.string("%Y-%m-%d_%H-%M-%S." ^ ext()^ ".rec#s"))
 
 #set tracknum start
 dir = directory ^ "/" ^ folder()
-count = list.length(file.ls(recursive=false, pattern="*."^ext(), dir)) + 1
+count = list.length(file.ls(recursive=false, pattern="*."^ext(), dir))
 tracknum = ref(count)
 log(label="liquidsoap-record", level=2,"Initialized with track number: " ^ string(tracknum()))
 
@@ -334,42 +334,42 @@ def add_metadata(m)
 end
 
 
-#liquidsoap app/scripts/record.liq -- -url https://stream.radioparadise.com/rock-flacm -dir /music/ -covers 0 -id s308827 -transcode 0 -station 'Radio Paradise (Rock Mix)'
 #define when to reopen file on new metadata
 def handle_metadata(m)	
 	if single != "1" then
-	log(label="liquidsoap-record", level=3,"rec#" ^ string(counter()) ^ " NEW METADATA " ^ string(m))
-	if (m["artist"] != "") and (m["title"] != "") and ((m["artist"] != tmp_artist()) or (m["title"] != tmp_title())) then
-	log(label="liquidsoap-record", level=3,"rec#" ^ string(counter()) ^ " RE-OPEN ARTIST - TITLE")
-	ref.incr(counter)	
-	tmp_artist.set(m["artist"])
-	tmp_title.set(m["title"])
-	f_artist = remove_illegal(m["artist"])
-	f_title = remove_illegal(m["title"])
-	filename.set("#{directory}/" ^ folder() ^ "/#{tracknum()} #{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))	
-	nowrecording.set("#{tracknum()} #{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
-	if covers == "1" then
-	thread.run(delay=5.,{download_cover(m,"#{directory}/" ^ folder() ^  "/rec#" ^ string(counter()) ^ ".cover")})
-	end
-	log(label="liquidsoap-record", level=2,"rec#" ^ string(counter()) ^ " New Track Detected. Recording Track.. #{f_artist} - #{f_title}." ^ ext())	
-	log(label="liquidsoap-record", level=2,"-- press CTRL-C to stop/exit --")
-	true
-	elsif (m["artist"] == "") and (m["title"] != "") and (m["title"] != tmp_title()) then
-	log(label="liquidsoap-record", level=3,"rec#" ^ string(counter()) ^ " RE-OPEN TITLE")
-	ref.incr(counter)	
-	tmp_title.set(m["title"])
-	f_title = remove_illegal(m["title"])
-	filename.set("#{directory}/" ^ folder() ^  "/#{tracknum()} #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
-	nowrecording.set("#{tracknum()} #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
-	log(label="liquidsoap-record", level=2,"rec#" ^ string(counter()) ^ " New Track Detected. Recording.. #{f_title}." ^ ext())	
-	log(label="liquidsoap-record", level=2,"-- press CTRL-C to stop/exit --")
-	true	
+		log(label="liquidsoap-record", level=3,"rec#" ^ string(counter()) ^ " NEW METADATA " ^ string(m))
+		if (m["artist"] != "") and (m["title"] != "") and ((m["artist"] != tmp_artist()) or (m["title"] != tmp_title())) then
+			log(label="liquidsoap-record", level=3,"rec#" ^ string(counter()) ^ " RE-OPEN ARTIST - TITLE")
+			ref.incr(counter)				
+			tmp_artist.set(m["artist"])
+			tmp_title.set(m["title"])
+			f_artist = remove_illegal(m["artist"])
+			f_title = remove_illegal(m["title"])
+			filename.set("#{directory}/" ^ folder() ^ "/#{tracknum()} #{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))	
+			nowrecording.set("#{tracknum()} #{f_artist} - #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
+			if covers == "1" then
+				thread.run(delay=5.,{download_cover(m,"#{directory}/" ^ folder() ^  "/rec#" ^ string(counter()) ^ ".cover")})
+			end
+	
+			log(label="liquidsoap-record", level=2,"rec#" ^ string(counter()) ^ " New Track Detected. Recording Track.. #{f_artist} - #{f_title}." ^ ext())	
+			log(label="liquidsoap-record", level=2,"-- press CTRL-C to stop/exit --")
+			true
+		elsif (m["artist"] == "") and (m["title"] != "") and (m["title"] != tmp_title()) then
+			log(label="liquidsoap-record", level=3,"rec#" ^ string(counter()) ^ " RE-OPEN TITLE")
+			ref.incr(counter)			
+			tmp_title.set(m["title"])
+			f_title = remove_illegal(m["title"])
+			filename.set("#{directory}/" ^ folder() ^  "/#{tracknum()} #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
+			nowrecording.set("#{tracknum()} #{f_title}." ^ ext() ^ ".rec#" ^ string(counter()))
+			log(label="liquidsoap-record", level=2,"rec#" ^ string(counter()) ^ " New Track Detected. Recording.. #{f_title}." ^ ext())	
+			log(label="liquidsoap-record", level=2,"-- press CTRL-C to stop/exit --")
+		true	
+		else
+			log(label="liquidsoap-record", level=3,"rec#" ^ string(counter()) ^ " FALSE - NOT RE-OPENING" )
+			false
+		end
 	else
-	log(label="liquidsoap-record", level=3,"rec#" ^ string(counter()) ^ " FALSE - NOT RE-OPENING" )
-	false
-	end
-	else
-	false
+		false
 	end
 end
 
@@ -471,27 +471,21 @@ def handle_file(f)
 		file.copy(tmp_ext_filename, tfilename())
 	end
 	
-	file.remove(tmp_ext_filename)	
-	
+	file.remove(tmp_ext_filename)		
 	if (f_duration() < 15.) and (keep == "0") then
-	file.remove(tfilename())
-	log(label="liquidsoap-record", level=2,tno ^ " Deleted unwanted fragment " ^ tfilename())	
-	# decrement tracknum
-	tracknum.set(tracknum() - 1)
+		file.remove(tfilename())
+		log(label="liquidsoap-record", level=2,tno ^ " Deleted unwanted fragment " ^ tfilename())			
 	elsif (f_duration() < 15.) and (keep == "1") then
-	file.mkdir("#{directory}/" ^ folder() ^ "/incomplete")
-	file.move(tfilename(),"#{directory}/" ^ folder() ^ "/incomplete")
-	file.remove(tfilename())
-	# decrement tracknum
-	tracknum.set(tracknum() - 1)
-	log(label="liquidsoap-record", level=3,tno ^ " Moved unwanted fragment ID " ^ tno ^ " to incomplete.Filename "  ^ tfilename())
-		
+		file.mkdir("#{directory}/" ^ folder() ^ "/incomplete")
+		file.move(tfilename(),"#{directory}/" ^ folder() ^ "/incomplete")
+		file.remove(tfilename())		
+		log(label="liquidsoap-record", level=2,tno ^ " Moved unwanted fragment ID " ^ tno ^ " to incomplete.Filename "  ^ tfilename())		
 	elsif (f_duration() > 15.) then
-	log(label="liquidsoap-record", level=2,tno ^ " Finished track #{tracknum()}. Keeping file: " ^ tfilename())
-	
-	end
+		log(label="liquidsoap-record", level=2,tno ^ " Finished track #{tracknum()}. Keeping file: " ^ tfilename())	
+	end	
 
-	# increment tracknum
+	# we increment tracknum in any case, will create gaps if fragments are deleted but keeps numbering consistent
+	log(label="liquidsoap-record", level=2,"Incrementing track number #{tracknum()} ..")			
 	ref.incr(tracknum)
 	
 end
