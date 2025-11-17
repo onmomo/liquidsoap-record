@@ -68,6 +68,16 @@ Stream Copy with tunein_id (e.g) https://tunein.com/radio/Roxx-Radio-s240638/
 liquidsoap record.liq -- -url "http://stream.radiojar.com/aay95tkmb" -dir "c:\music" -covers 1 -id s240638
 ```
 
+## Docker
+
+Clone this repository and run in project root:
+
+```
+docker run --rm -v $PWD:/src -v /Users/$USER/Music/liquidsoap/:/music -it onmomo/liquidsoap:latest liquidsoap /src/record.liq -- -url "https://stream.radioparadise.com/rock-flacm" -dir "/music/" -covers 0 -id s308827 -single -transcode 0 -log 3 -station "Radio Paradise (Rock Mix)"
+```
+
+The image `onmomo/liquidsoap:latest` contains the necessary ffmpeg binaries.
+
 ## Transcoding
 
 Transcoding suggestions table
