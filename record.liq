@@ -300,7 +300,14 @@ nowrecording.set(time.string("%Y-%m-%d_%H-%M-%S." ^ ext()^ ".rec#s"))
 #set tracknum start
 dir = directory ^ "/" ^ folder()
 count = list.length(file.ls(recursive=false, pattern="*."^ext(), dir)) + 1
-tracknum = ref(count)
+tracknum = ref(
+  try
+	int_of_string(environment.get("INIT_TRACK_NUM"))
+  catch err do
+	log(label="liquidsoap-record", level=2, "Invalid INIT_TRACK_NUM environment variable, using count: " ^ string(count) ^ " - error: " ^ err.message)
+	count
+  end
+)
 log(label="liquidsoap-record", level=2,"Initialized with track number: " ^ string(tracknum()))
 
 
